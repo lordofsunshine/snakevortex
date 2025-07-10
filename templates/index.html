@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnakeVortex - Multiplayer Snake Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="connection-lost" class="connection-overlay">
+        <div class="connection-message">
+            <div class="connection-icon">⚠️</div>
+            <h3>Connection Lost</h3>
+            <p>Reconnecting...</p>
+            <div class="connection-progress"></div>
+        </div>
+    </div>
+
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <h1 class="game-title">SNAKE VORTEX</h1>
+            <p class="game-subtitle">Multiplayer Snake Arena</p>
+            <div class="login-form">
+                <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="15">
+                <div class="color-selector">
+                    <div class="color-option selected" data-color="#ff6b6b"></div>
+                    <div class="color-option" data-color="#4ecdc4"></div>
+                    <div class="color-option" data-color="#45b7d1"></div>
+                    <div class="color-option" data-color="#f9ca24"></div>
+                    <div class="color-option" data-color="#f0932b"></div>
+                    <div class="color-option" data-color="#eb4d4b"></div>
+                    <div class="color-option" data-color="#6c5ce7"></div>
+                    <div class="color-option" data-color="#a29bfe"></div>
+                </div>
+                <button id="join-button" class="play-button">ENTER ARENA</button>
+            </div>
+            <div style="display: none" class="game-features">
+                <div class="feature">
+                    <span class="feature-icon">⚡</span>
+                    <span>Power-ups & Abilities</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🎯</span>
+                    <span>Smooth Controls</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🏆</span>
+                    <span>Live Leaderboard</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🤖</span>
+                    <span>Smart AI Opponents</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="game-ui">
+            <div class="top-ui">
+                <div class="score-display">
+                    <span class="score-label">Score:</span>
+                    <span id="player-score" class="score-value">0</span>
+                </div>
+                <div class="length-display">
+                    <span class="length-label">Length:</span>
+                    <span id="player-length" class="length-value">4</span>
+                </div>
+                <div class="rank-display">
+                    <span class="rank-label">Rank:</span>
+                    <span id="player-rank" class="rank-value">-</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard">
+                <h3 class="leaderboard-title">🏆 Leaders</h3>
+                <div id="leaderboard-list" class="leaderboard-content"></div>
+            </div>
+        </div>
+        
+        <div id="spectator-mode" class="spectator-overlay">
+            <div class="spectator-text">Spectator Mode</div>
+            <div id="spectator-target" class="spectator-target"></div>
+        </div>
+        
+        <canvas id="game-canvas"></canvas>
+        
+        <div class="game-controls">
+            <div class="control-hint">
+                <span>Mouse Control • Boost: Spacebar</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="death-screen" class="death-overlay">
+        <div class="death-container">
+            <h2 class="death-title">💀 Game Over!</h2>
+            <div class="death-stats">
+                <div class="stat">
+                    <span class="stat-label">Final Score:</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Max Length:</span>
+                    <span id="final-length" class="stat-value">4</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Game Time:</span>
+                    <span id="game-time" class="stat-value">0:00</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Best Rank:</span>
+                    <span id="best-rank" class="stat-value">-</span>
+                </div>
+            </div>
+            <div class="death-actions">
+                <button id="spectate-button" class="action-button secondary">Watch Others</button>
+                <button id="restart-button" class="action-button primary">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='game.js') }}"></script>
+</body>
+</html>
