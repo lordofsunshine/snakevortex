@@ -10,7 +10,7 @@ from quart_cors import cors
 from modules.game_state import game_state, connected_clients, MAX_PLAYERS, FOOD_COUNT, POWER_FOOD_COUNT, INITIAL_SNAKE_LENGTH
 from modules.snake_logic import create_snake
 from modules.utils import find_safe_spawn_position
-from modules.food_system import generate_food, generate_power_food
+from modules.food_system import generate_food, generate_power_food, create_death_food
 from modules.bot_ai import create_bot
 from modules.game_loop import game_loop
 
@@ -31,6 +31,13 @@ def check_rate_limit(client_ip):
         return False
     
     requests.append(current_time)
+    
+    if len(rate_limit_storage) > 1000:
+        old_ips = [ip for ip, reqs in rate_limit_storage.items() 
+                  if not reqs or current_time - max(reqs) > RATE_LIMIT_WINDOW * 2]
+        for ip in old_ips[:500]:
+            del rate_limit_storage[ip]
+    
     return True
 
 def is_name_unique(name):
@@ -75,7 +82,9 @@ async def rate_limit_exceeded(error):
 
 @app.websocket('/ws')
 async def websocket_endpoint():
-    connected_clients.add(websocket._get_current_object())
+    ws_obj = websocket._get_current_object()
+    connected_clients.add(ws_obj)
+    current_player_id = None
     
     try:
         while True:
@@ -91,6 +100,7 @@ async def websocket_endpoint():
                     continue
                 
                 player_id = str(uuid.uuid4())
+                current_player_id = player_id
                 start_pos = find_safe_spawn_position()
                 unique_name = get_unique_name(data['name'])
                 
@@ -106,7 +116,8 @@ async def websocket_endpoint():
                     'color': data.get('color', '#ff6b6b'),
                     'powers': {},
                     'ping': 0,
-                    'spawn_protection': time.time() * 1000 + 5000
+                    'spawn_protection': time.time() * 1000 + 5000,
+                    'last_ping': time.time()
                 }
                 
                 game_state['players'][player_id] = player
@@ -123,6 +134,7 @@ async def websocket_endpoint():
                     player = game_state['players'][player_id]
                     if player['alive']:
                         player['direction'] = data['direction']
+                        player['last_ping'] = time.time()
                         if data.get('accelerating', False):
                             player['speed'] = 3.0
                         else:
@@ -132,11 +144,18 @@ async def websocket_endpoint():
                 player_id = data['player_id']
                 if player_id in game_state['players']:
                     game_state['players'][player_id]['ping'] = data['ping']
+                    game_state['players'][player_id]['last_ping'] = time.time()
     
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
-        connected_clients.discard(websocket._get_current_object())
+        connected_clients.discard(ws_obj)
+        if current_player_id and current_player_id in game_state['players']:
+            if game_state['players'][current_player_id]['alive']:
+                player = game_state['players'][current_player_id]
+                death_food = create_death_food(player['snake'], player['score'])
+                game_state['food'].extend(death_food)
+            del game_state['players'][current_player_id]
 
 def initialize_game():
     for _ in range(FOOD_COUNT):

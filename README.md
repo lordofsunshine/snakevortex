@@ -1,10 +1,25 @@
 # 🐍 SnakeVortex - Multiplayer Snake Arena
 
+## Language / Язык
+
+| Language | README |
+|----------|--------|
+| 🇺🇸 English | [README.md](README.md) |
+| 🇷🇺 Русский | [README.ru.md](README.ru.md) |
+
+---
+
 ## About
 
 I've created SnakeVortex, a multiplayer snake game that brings the classic gameplay to the web with real-time multiplayer capabilities. This is a fully-featured snake arena where players compete against each other and intelligent AI bots in a dynamic environment. ***This is my first time working with AI bots and on such a game in general, so don't hit me too hard)***
 
 <img alt="Banner" src="https://i.postimg.cc/C1rSDw8Q/image.png">
+
+## What's New? 🐍
+- [x] Added visible map boundaries with beautiful gradient effects
+- [x] Enhanced AI bots with different personalities and hunting tactics. Strong bots now actively hunt weaker bots and players
+- [x] Optimized game performance and memory management
+- [x] Improved UI design and code refactoring with modular architecture
 
 ## Features
 

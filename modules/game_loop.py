@@ -44,6 +44,8 @@ async def update_game_state():
     if current_time % 10000 < 50:
         clear_collision_cache()
         clear_bot_caches()
+        cleanup_inactive_players()
+        cleanup_dead_entities()
 
 async def process_all_entities():
     player_tasks = []
@@ -156,6 +158,7 @@ async def process_power_consumption_for_entity(entity, consumed_indices):
 
 async def kill_player(player_id, player):
     player['alive'] = False
+    player['death_time'] = time.time() * 1000
     
     death_food = create_death_food(player['snake'], player['score'])
     game_state['food'].extend(death_food)
@@ -165,6 +168,7 @@ async def kill_player(player_id, player):
 
 async def kill_bot(bot_id, bot):
     bot['alive'] = False
+    bot['death_time'] = time.time() * 1000
     
     death_food = create_death_food(bot['snake'], bot['score'])
     game_state['food'].extend(death_food)
@@ -235,3 +239,44 @@ async def send_to_client(client, message):
         await client.send(message)
     except Exception as e:
         connected_clients.discard(client)
+
+def cleanup_inactive_players():
+    current_time = time.time()
+    inactive_players = []
+    
+    for player_id, player in game_state['players'].items():
+        if 'last_ping' in player and current_time - player['last_ping'] > 30:
+            inactive_players.append(player_id)
+    
+    for player_id in inactive_players:
+        if player_id in game_state['players']:
+            player = game_state['players'][player_id]
+            if player['alive']:
+                death_food = create_death_food(player['snake'], player['score'])
+                game_state['food'].extend(death_food)
+            del game_state['players'][player_id]
+
+def cleanup_dead_entities():
+    current_time = time.time() * 1000
+    
+    dead_players = [pid for pid, player in game_state['players'].items() 
+                   if not player['alive'] and current_time - player.get('death_time', current_time) > 60000]
+    for pid in dead_players:
+        del game_state['players'][pid]
+    
+    dead_bots = [bid for bid, bot in game_state['bots'].items() 
+                if not bot['alive'] and current_time - bot.get('death_time', current_time) > 60000]
+    for bid in dead_bots:
+        del game_state['bots'][bid]
+    
+    game_state['food'] = [f for f in game_state['food'] 
+                         if f.get('scale', 1.0) > 0.1 or current_time - f.get('created_at', current_time) < 120000]
+    
+    game_state['power_food'] = [p for p in game_state['power_food'] 
+                               if p.get('scale', 1.0) > 0.1]
+    
+    if len(game_state['food']) > FOOD_COUNT * 3:
+        game_state['food'] = game_state['food'][-FOOD_COUNT * 2:]
+    
+    if len(game_state['power_food']) > POWER_FOOD_COUNT * 3:
+        game_state['power_food'] = game_state['power_food'][-POWER_FOOD_COUNT * 2:]

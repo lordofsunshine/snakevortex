@@ -6,13 +6,17 @@
     <title>SnakeVortex - Multiplayer Snake Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div id="connection-lost" class="connection-overlay">
         <div class="connection-message">
-            <div class="connection-icon">⚠️</div>
+            <div class="connection-icon"><svg xmlns="http://www.w3.org/2000/svg" width="42px" height="42px" viewBox="0 0 64 64">
+                <rect width="64" height="64" fill="none" />
+                <path fill="#ffdd15" d="M63.37 53.52Q49.287 27.795 35.2 2.07a3.687 3.687 0 0 0-6.522 0C19.289 19.22 9.892 36.37.508 53.52c-1.453 2.649.399 6.083 3.258 6.083h56.35c1.584 0 2.648-.853 3.203-2.01c.698-1.102.885-2.565.055-4.075" />
+                <path fill="#1f2e35" d="m28.917 34.477l-.889-13.262q-.247-3.875-.246-5.565c0-1.534.4-2.727 1.202-3.588q1.207-1.285 3.175-1.286c1.583 0 2.646.551 3.178 1.646q.807 1.652.809 4.751q0 1.824-.198 3.708l-1.19 13.649q-.193 2.439-.827 3.739c-.426.871-1.128 1.301-2.109 1.301c-.992 0-1.69-.419-2.072-1.257c-.393-.841-.668-2.12-.833-3.836m3.072 18.217q-1.687.002-2.947-1.093q-1.26-1.093-1.26-3.058c0-1.143.4-2.12 1.202-2.921c.805-.806 1.786-1.206 2.951-1.206s2.153.4 2.977 1.206c.815.801 1.234 1.778 1.234 2.921c0 1.29-.419 2.308-1.246 3.044a4.25 4.25 0 0 1-2.911 1.107" />
+            </svg></div>
             <h3>Connection Lost</h3>
             <p>Reconnecting...</p>
             <div class="connection-progress"></div>
@@ -37,24 +41,6 @@
                 </div>
                 <button id="join-button" class="play-button">ENTER ARENA</button>
             </div>
-            <div style="display: none" class="game-features">
-                <div class="feature">
-                    <span class="feature-icon">⚡</span>
-                    <span>Power-ups & Abilities</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-icon">🎯</span>
-                    <span>Smooth Controls</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-icon">🏆</span>
-                    <span>Live Leaderboard</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-icon">🤖</span>
-                    <span>Smart AI Opponents</span>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -69,14 +55,13 @@
                     <span class="length-label">Length:</span>
                     <span id="player-length" class="length-value">4</span>
                 </div>
-                <div class="rank-display">
-                    <span class="rank-label">Rank:</span>
-                    <span id="player-rank" class="rank-value">-</span>
-                </div>
             </div>
             
             <div class="leaderboard">
-                <h3 class="leaderboard-title">🏆 Leaders</h3>
+                <h3 class="leaderboard-title"><svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                    <rect width="24" height="24" fill="none" />
+                    <path fill="currentColor" d="M7.475 20q-1.852 0-3.163-1.311T3 15.525q0-1.823 1.274-3.126t3.097-1.343q.192 0 .385.029q.192.029.384.067L4.846 4.539h4.77L12 9.308l2.385-4.77h4.769l-3.27 6.545q.174-.039.357-.058q.182-.02.375-.02q1.836.047 3.11 1.35T21 15.5q0 1.877-1.311 3.189T16.5 20q-.283 0-.578-.032q-.295-.031-.558-.12q1.182-.515 1.659-1.751T17.5 15.5q0-2.302-1.599-3.901T12 10t-3.901 1.599T6.5 15.5q0 1.373.44 2.642q.44 1.27 1.69 1.706q-.282.089-.567.12T7.475 20M12 20q-1.875 0-3.187-1.312T7.5 15.5t1.313-3.187T12 11t3.188 1.313T16.5 15.5t-1.312 3.188T12 20m-1.561-2.211L12 16.6l1.562 1.189l-.585-1.93l1.562-1.113h-1.93L12 12.712l-.61 2.034H9.462l1.562 1.114z" />
+                </svg> Leaders</h3>
                 <div id="leaderboard-list" class="leaderboard-content"></div>
             </div>
         </div>
@@ -97,7 +82,10 @@
 
     <div id="death-screen" class="death-overlay">
         <div class="death-container">
-            <h2 class="death-title">💀 Game Over!</h2>
+            <h2 class="death-title"><svg xmlns="http://www.w3.org/2000/svg" width="42px" height="42px" viewBox="0 0 24 24">
+                <rect width="24" height="24" fill="none" />
+                <path fill="currentColor" d="M8 22L5 8l3-6h8l3 6l-3 14zm3-16v2H9v2h2v5h2v-5h2V8h-2V6z" />
+            </svg> Game Over!</h2>
             <div class="death-stats">
                 <div class="stat">
                     <span class="stat-label">Final Score:</span>
@@ -107,14 +95,6 @@
                     <span class="stat-label">Max Length:</span>
                     <span id="final-length" class="stat-value">4</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">Game Time:</span>
-                    <span id="game-time" class="stat-value">0:00</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Best Rank:</span>
-                    <span id="best-rank" class="stat-value">-</span>
-                </div>
             </div>
             <div class="death-actions">
                 <button id="spectate-button" class="action-button secondary">Watch Others</button>
@@ -123,6 +103,10 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='game.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-core.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-networking.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-rendering.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-ui.js') }}"></script>
 </body>
 </html>
