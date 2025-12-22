@@ -1,6 +1,7 @@
 import random
 import time
 from .game_state import game_state, WORLD_WIDTH, WORLD_HEIGHT, get_random_position_cached
+from .arena_system import clamp_to_arena
 
 FOOD_COLORS = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe']
 
@@ -70,9 +71,10 @@ def create_death_food(snake, score):
     for i in range(food_count):
         if i < len(snake):
             segment = snake[i]
+            x, y = clamp_to_arena(segment['x'] + random.randint(-20, 20), segment['y'] + random.randint(-20, 20), margin=10.0)
             death_food.append({
-                'x': segment['x'] + random.randint(-20, 20),
-                'y': segment['y'] + random.randint(-20, 20),
+                'x': x,
+                'y': y,
                 'size': random.randint(4, 8),
                 'color': random.choice(FOOD_COLORS),
                 'scale': 1.0,

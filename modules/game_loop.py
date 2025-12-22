@@ -1,13 +1,12 @@
 import asyncio
 import json
 import time
-import copy
 from .game_state import game_state, connected_clients, FOOD_COUNT, POWER_FOOD_COUNT, update_spatial_grid, get_cached_leaderboard
-from .snake_logic import move_snake, grow_snake, apply_power_effects, clean_expired_powers
-from .collision import check_collision, check_food_collision, check_power_food_collision, clear_collision_cache
+from .snake_logic import move_snake, grow_snake, apply_power_effects, clean_expired_powers, update_entity_speed
+from .collision import check_collision, check_food_collision, check_power_food_collision
 from .food_system import generate_food, generate_power_food, create_death_food, animate_food_scaling, remove_consumed_food, remove_consumed_power_food, batch_generate_food, batch_generate_power_food
 from .bot_ai import bot_ai, update_food_cache, clear_bot_caches, create_bot
-from .utils import distance_squared
+from .arena_system import update_arena
 
 FRAME_TIME = 1000 / 60
 last_frame_time = 0
@@ -32,85 +31,128 @@ async def game_loop():
 async def update_game_state():
     current_time = time.time() * 1000
     
-    update_spatial_grid()
+    update_arena(current_time)
+    if not game_state['spatial_grid']:
+        update_spatial_grid()
     update_food_cache()
-    
-    await process_all_entities()
+
+    await move_all_entities(current_time)
+    update_spatial_grid()
+    await resolve_collisions_and_consumptions(current_time)
+    cull_items_outside_arena()
     
     animate_food_scaling()
     maintain_food_count()
     maintain_bot_count()
     
     if current_time % 10000 < 50:
-        clear_collision_cache()
         clear_bot_caches()
         cleanup_inactive_players()
         cleanup_dead_entities()
 
-async def process_all_entities():
-    player_tasks = []
-    bot_tasks = []
-    
-    for player_id, player in list(game_state['players'].items()):
-        if player['alive']:
-            player_tasks.append(process_player(player_id, player))
-    
-    for bot_id, bot in list(game_state['bots'].items()):
-        if bot['alive']:
-            bot_tasks.append(process_bot(bot_id, bot))
-    
-    if player_tasks or bot_tasks:
-        await asyncio.gather(*(player_tasks + bot_tasks), return_exceptions=True)
-
-async def process_player(player_id, player):
-    try:
-        if player['direction'] is not None:
+async def move_all_entities(current_time):
+    for _, player in list(game_state['players'].items()):
+        if not player.get('alive'):
+            continue
+        spawn_time = player.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        update_entity_speed(player, current_time)
+        if player.get('direction') is not None:
             move_snake(player['snake'], player['direction'], player['speed'])
-        
-        if check_collision(player['snake'], player_id, 'player'):
+
+    for _, bot in list(game_state['bots'].items()):
+        if not bot.get('alive'):
+            continue
+        spawn_time = bot.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        bot_ai(bot)
+        update_entity_speed(bot, current_time)
+        if bot.get('direction') is not None:
+            move_snake(bot['snake'], bot['direction'], bot['speed'])
+
+async def resolve_collisions_and_consumptions(current_time):
+    to_kill_players = []
+    to_kill_bots = []
+
+    for player_id, player in list(game_state['players'].items()):
+        if not player.get('alive'):
+            continue
+        spawn_time = player.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        if check_collision(player.get('snake', []), player_id, 'player'):
+            to_kill_players.append((player_id, player))
+
+    for bot_id, bot in list(game_state['bots'].items()):
+        if not bot.get('alive'):
+            continue
+        spawn_time = bot.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        if check_collision(bot.get('snake', []), bot_id, 'bot'):
+            to_kill_bots.append((bot_id, bot))
+
+    for player_id, player in to_kill_players:
+        if player.get('alive'):
             await kill_player(player_id, player)
-            return
-        
-        consumed_food = check_food_collision(player['snake'], player_id)
-        consumed_power = check_power_food_collision(player['snake'], player_id)
-        
+
+    for bot_id, bot in to_kill_bots:
+        if bot.get('alive'):
+            await kill_bot(bot_id, bot)
+
+    for _, player in list(game_state['players'].items()):
+        if not player.get('alive'):
+            continue
+        spawn_time = player.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        consumed_food = check_food_collision(player['snake'], player['id'])
+        consumed_power = check_power_food_collision(player['snake'], player['id'])
+
         if consumed_food:
             await process_food_consumption_for_entity(player, consumed_food)
-        
+
         if consumed_power:
             await process_power_consumption_for_entity(player, consumed_power)
-        
+
         apply_power_effects(player)
         clean_expired_powers(player)
-        
-    except Exception as e:
-        print(f"Error processing player {player_id}: {e}")
 
-async def process_bot(bot_id, bot):
-    try:
-        bot_ai(bot)
-        
-        if bot['direction'] is not None:
-            move_snake(bot['snake'], bot['direction'], bot['speed'])
-        
-        if check_collision(bot['snake'], bot_id, 'bot'):
-            await kill_bot(bot_id, bot)
-            return
-        
-        consumed_food = check_food_collision(bot['snake'], bot_id)
-        consumed_power = check_power_food_collision(bot['snake'], bot_id)
-        
+    for _, bot in list(game_state['bots'].items()):
+        if not bot.get('alive'):
+            continue
+        spawn_time = bot.get('spawn_time_ms')
+        if spawn_time is not None and current_time < spawn_time:
+            continue
+        consumed_food = check_food_collision(bot['snake'], bot['id'])
+        consumed_power = check_power_food_collision(bot['snake'], bot['id'])
+
         if consumed_food:
             await process_food_consumption_for_entity(bot, consumed_food)
-        
+
         if consumed_power:
             await process_power_consumption_for_entity(bot, consumed_power)
-        
+
         apply_power_effects(bot)
         clean_expired_powers(bot)
-        
-    except Exception as e:
-        print(f"Error processing bot {bot_id}: {e}")
+
+def cull_items_outside_arena():
+    arena = game_state.get('arena')
+    if not arena:
+        return
+    if not all(k in arena for k in ('min_x', 'min_y', 'max_x', 'max_y')):
+        return
+
+    min_x = float(arena['min_x'])
+    min_y = float(arena['min_y'])
+    max_x = float(arena['max_x'])
+    max_y = float(arena['max_y'])
+
+    margin = 20.0
+    game_state['food'] = [f for f in game_state['food'] if (f.get('scale', 1.0) > 0) and (min_x - margin <= f['x'] <= max_x + margin) and (min_y - margin <= f['y'] <= max_y + margin)]
+    game_state['power_food'] = [p for p in game_state['power_food'] if (p.get('scale', 1.0) > 0) and (min_x - margin <= p['x'] <= max_x + margin) and (min_y - margin <= p['y'] <= max_y + margin)]
 
 async def process_food_consumption_for_entity(entity, consumed_indices):
     if not consumed_indices:
@@ -133,8 +175,15 @@ async def process_food_consumption_for_entity(entity, consumed_indices):
     
     entity['score'] += score_gain
     entity['length'] += growth_amount
-    
-    for _ in range(growth_amount):
+
+    segment_multiplier = 1
+    if entity['length'] >= 300:
+        segment_multiplier = 3
+    elif entity['length'] >= 150:
+        segment_multiplier = 2
+
+    growth_segments = growth_amount * segment_multiplier
+    for _ in range(growth_segments):
         grow_snake(entity['snake'])
     
     remove_consumed_food(consumed_indices)
@@ -218,7 +267,8 @@ async def broadcast_game_state():
             'bots': game_state['bots'],
             'food': game_state['food'],
             'power_food': game_state['power_food'],
-            'leaderboard': leaderboard
+            'leaderboard': leaderboard,
+            'arena': game_state.get('arena')
         }
         
         message_json = json.dumps(message)

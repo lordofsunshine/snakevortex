@@ -50,6 +50,42 @@ body::before {
     backdrop-filter: blur(10px);
 }
 
+.menu-footer {
+    position: absolute;
+    bottom: 22px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 11;
+    pointer-events: auto;
+}
+
+.github-button {
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.88);
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.github-button:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.98);
+}
+
+.github-button:active {
+    transform: translateY(0);
+}
+
 .login-container {
     text-align: center;
     max-width: 600px;
@@ -171,7 +207,7 @@ body::before {
 }
 
 #game-screen {
-    background: #0a0a0a;
+    background: transparent;
     position: relative;
 }
 
@@ -183,6 +219,10 @@ body::before {
     height: 100vh;
     background: #111;
     z-index: 1;
+}
+
+body.menu-active #game-canvas {
+    filter: brightness(0.5) saturate(0.9);
 }
 
 .game-ui {
@@ -502,9 +542,10 @@ body::before {
 
 .spectator-overlay {
     position: fixed;
-    top: 50%;
+    top: auto;
+    bottom: 26px;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.7);
     padding: 20px 30px;
     border-radius: 10px;
@@ -513,6 +554,8 @@ body::before {
     display: none;
     z-index: 30;
     opacity: .5;
+    max-width: min(520px, calc(100vw - 40px));
+    width: max-content;
 }
 
 .spectator-text {

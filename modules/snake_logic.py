@@ -2,8 +2,6 @@ import math
 import time
 from .utils import distance_squared
 
-_movement_cache = {}
-
 def create_snake(position):
     return [
         {'x': position['x'], 'y': position['y']},
@@ -53,10 +51,23 @@ def grow_snake(snake):
 
 def apply_power_effects(entity):
     current_time = time.time() * 1000
-    
+
     if 'magnet' in entity.get('powers', {}):
         if current_time < entity['powers']['magnet']:
             apply_magnet_effect(entity)
+
+def update_entity_speed(entity, current_time=None):
+    if current_time is None:
+        current_time = time.time() * 1000
+
+    desired = float(entity.get('desired_speed', entity.get('speed', 2.0)))
+    speed = desired
+
+    powers = entity.get('powers', {})
+    if 'speed' in powers and current_time < powers['speed']:
+        speed *= 1.35
+
+    entity['speed'] = min(4.0, max(0.5, speed))
 
 def apply_magnet_effect(entity):
     if not entity['snake']:
@@ -91,7 +102,3 @@ def clean_expired_powers(entity):
     
     for power_type in expired_powers:
         del entity['powers'][power_type]
-
-def clear_movement_cache():
-    global _movement_cache
-    _movement_cache.clear()

@@ -39,15 +39,18 @@ def get_nearby_cells(x, y, radius=1):
 
 def update_spatial_grid():
     game_state['spatial_grid'].clear()
+    now_ms = time.time() * 1000
     
     for player_id, player in game_state['players'].items():
-        if player['alive'] and player['snake']:
+        spawn_time = player.get('spawn_time_ms')
+        if player['alive'] and player['snake'] and (spawn_time is None or now_ms >= spawn_time):
             for i, segment in enumerate(player['snake']):
                 cell = get_grid_key(segment['x'], segment['y'])
                 game_state['spatial_grid'][cell].append(('player', player_id, segment))
     
     for bot_id, bot in game_state['bots'].items():
-        if bot['alive'] and bot['snake']:
+        spawn_time = bot.get('spawn_time_ms')
+        if bot['alive'] and bot['snake'] and (spawn_time is None or now_ms >= spawn_time):
             for i, segment in enumerate(bot['snake']):
                 cell = get_grid_key(segment['x'], segment['y'])
                 game_state['spatial_grid'][cell].append(('bot', bot_id, segment))
@@ -59,7 +62,8 @@ def get_cached_leaderboard():
         all_entities = []
         
         for player in game_state['players'].values():
-            if player['alive']:
+            spawn_time = player.get('spawn_time_ms')
+            if player['alive'] and (spawn_time is None or current_time >= spawn_time):
                 all_entities.append({
                     'name': player['name'],
                     'score': player['score'],
@@ -67,7 +71,8 @@ def get_cached_leaderboard():
                 })
         
         for bot in game_state['bots'].values():
-            if bot['alive']:
+            spawn_time = bot.get('spawn_time_ms')
+            if bot['alive'] and (spawn_time is None or current_time >= spawn_time):
                 all_entities.append({
                     'name': bot['name'],
                     'score': bot['score'],
@@ -83,13 +88,36 @@ def get_random_position_cached():
     global _position_pool, _pool_refill_time
     
     current_time = time.time() * 1000
+    arena = game_state.get('arena')
+    if arena and all(k in arena for k in ('min_x', 'min_y', 'max_x', 'max_y')):
+        min_x = float(arena['min_x'])
+        min_y = float(arena['min_y'])
+        max_x = float(arena['max_x'])
+        max_y = float(arena['max_y'])
+    else:
+        min_x = 0.0
+        min_y = 0.0
+        max_x = float(WORLD_WIDTH)
+        max_y = float(WORLD_HEIGHT)
+
+    margin = 50.0
+    min_x_s = min_x + margin
+    max_x_s = max_x - margin
+    min_y_s = min_y + margin
+    max_y_s = max_y - margin
+    if min_x_s >= max_x_s:
+        min_x_s = min_x
+        max_x_s = max_x
+    if min_y_s >= max_y_s:
+        min_y_s = min_y
+        max_y_s = max_y
     
     if current_time - _pool_refill_time > 1000 or len(_position_pool) < 10:
         _position_pool = []
         for _ in range(50):
             _position_pool.append({
-                'x': random.randint(50, WORLD_WIDTH - 50),
-                'y': random.randint(50, WORLD_HEIGHT - 50)
+                'x': random.randint(int(min_x_s), int(max_x_s)),
+                'y': random.randint(int(min_y_s), int(max_y_s))
             })
         _pool_refill_time = current_time
     
@@ -97,6 +125,6 @@ def get_random_position_cached():
         return _position_pool.pop()
     
     return {
-        'x': random.randint(50, WORLD_WIDTH - 50),
-        'y': random.randint(50, WORLD_HEIGHT - 50)
+        'x': random.randint(int(min_x_s), int(max_x_s)),
+        'y': random.randint(int(min_y_s), int(max_y_s))
     }

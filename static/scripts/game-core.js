@@ -30,12 +30,14 @@ class Game {
     this.leaderboardUpdateInterval = 500
 
     this.renderCache = {
-      visibleEntities: { food: [], powerFood: [] },
+      visibleEntities: { food: [], powerFood: [], players: [], bots: [] },
       lastCameraUpdate: 0,
       gridPattern: null,
       backgroundPattern: null,
       viewBounds: { left: 0, right: 0, top: 0, bottom: 0 },
     }
+
+    this.spawnCache = new Map()
 
     this.performanceSettings = {
       maxFoodRender: 150,
@@ -63,6 +65,8 @@ class Game {
     this.startRenderLoop()
     this.startConnectionMonitor()
     this.createBackgroundPattern()
+
+    document.body.classList.add("menu-active")
   }
 
   initAnimationCache() {
@@ -155,6 +159,7 @@ class Game {
 
     document.getElementById("login-screen").classList.remove("active")
     document.getElementById("game-screen").classList.add("active")
+    document.body.classList.remove("menu-active")
   }
 
   resetGame() {
@@ -168,6 +173,7 @@ class Game {
       document.getElementById("spectator-mode").style.display = "none"
       document.getElementById("game-screen").classList.remove("active")
       document.getElementById("login-screen").classList.add("active")
+      document.body.classList.add("menu-active")
       return
     }
 
@@ -183,6 +189,8 @@ class Game {
         color: this.selectedColor,
       }),
     )
+
+    document.body.classList.remove("menu-active")
   }
 
   updateMovement() {
@@ -250,10 +258,16 @@ class Game {
         targetY = targetEntity.snake[0].y
       }
     } else {
-      const player = this.gameState.players[this.playerId]
-      if (player?.snake?.length > 0) {
+      const player = this.playerId ? this.gameState.players[this.playerId] : null
+      if (player?.alive && player?.snake?.length > 0) {
         targetX = player.snake[0].x
         targetY = player.snake[0].y
+      } else if (this.gameState.leaderboard?.length > 0) {
+        const entity = this.findEntityByName(this.gameState.leaderboard[0].name)
+        if (entity?.snake?.length > 0) {
+          targetX = entity.snake[0].x
+          targetY = entity.snake[0].y
+        }
       }
     }
 
