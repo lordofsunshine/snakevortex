@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnakeVortex - Multiplayer Snake Game</title>
+    <meta name="description" content="SnakeVortex is a fast-paced multiplayer snake arena. Battle bots and players, grow your snake, and survive the shrinking arena.">
+    <meta name="keywords" content="SnakeVortex, multiplayer snake game, snake arena, online game, browser game, battle arena">
+    <meta name="author" content="SnakeVortex">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <link rel="canonical" href="https://snakevortex.vu/">
+    <meta name="theme-color" content="#0f141a">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SnakeVortex">
+    <meta property="og:title" content="SnakeVortex - Multiplayer Snake Game">
+    <meta property="og:description" content="Join SnakeVortex, a multiplayer snake arena where you grow, fight, and survive the shrinking map.">
+    <meta property="og:url" content="https://snakevortex.vu/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SnakeVortex - Multiplayer Snake Game">
+    <meta name="twitter:description" content="Join SnakeVortex, a multiplayer snake arena where you grow, fight, and survive the shrinking map.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+    <div id="connection-lost" class="connection-overlay">
+        <div class="connection-message">
+            <div class="connection-icon"><svg xmlns="http://www.w3.org/2000/svg" width="42px" height="42px" viewBox="0 0 64 64">
+                <rect width="64" height="64" fill="none" />
+                <path fill="#ffdd15" d="M63.37 53.52Q49.287 27.795 35.2 2.07a3.687 3.687 0 0 0-6.522 0C19.289 19.22 9.892 36.37.508 53.52c-1.453 2.649.399 6.083 3.258 6.083h56.35c1.584 0 2.648-.853 3.203-2.01c.698-1.102.885-2.565.055-4.075" />
+                <path fill="#1f2e35" d="m28.917 34.477l-.889-13.262q-.247-3.875-.246-5.565c0-1.534.4-2.727 1.202-3.588q1.207-1.285 3.175-1.286c1.583 0 2.646.551 3.178 1.646q.807 1.652.809 4.751q0 1.824-.198 3.708l-1.19 13.649q-.193 2.439-.827 3.739c-.426.871-1.128 1.301-2.109 1.301c-.992 0-1.69-.419-2.072-1.257c-.393-.841-.668-2.12-.833-3.836m3.072 18.217q-1.687.002-2.947-1.093q-1.26-1.093-1.26-3.058c0-1.143.4-2.12 1.202-2.921c.805-.806 1.786-1.206 2.951-1.206s2.153.4 2.977 1.206c.815.801 1.234 1.778 1.234 2.921c0 1.29-.419 2.308-1.246 3.044a4.25 4.25 0 0 1-2.911 1.107" />
+            </svg></div>
+            <h3>Connection Lost</h3>
+            <p>Reconnecting...</p>
+            <div class="connection-progress"></div>
+        </div>
+    </div>
+
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <h1 class="game-title">SNAKE VORTEX</h1>
+            <p class="game-subtitle">Multiplayer Snake Arena</p>
+            <div class="login-form">
+                <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="15">
+                <div class="color-selector">
+                    <div class="color-option selected" data-color="#ff6b6b"></div>
+                    <div class="color-option" data-color="#4ecdc4"></div>
+                    <div class="color-option" data-color="#45b7d1"></div>
+                    <div class="color-option" data-color="#f9ca24"></div>
+                    <div class="color-option" data-color="#f0932b"></div>
+                    <div class="color-option" data-color="#eb4d4b"></div>
+                    <div class="color-option" data-color="#6c5ce7"></div>
+                    <div class="color-option" data-color="#a29bfe"></div>
+                </div>
+                <button id="join-button" class="play-button">ENTER ARENA</button>
+            </div>
+        </div>
+        <div class="menu-footer">
+            <a class="github-button" href="https://github.com/lordofsunshine/snakevortex" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path fill="currentColor" d="M12 .5C5.73.5.75 5.63.75 12c0 5.12 3.29 9.46 7.86 10.99c.57.11.78-.25.78-.55v-2.02c-3.2.71-3.87-1.58-3.87-1.58c-.53-1.38-1.29-1.75-1.29-1.75c-1.05-.73.08-.72.08-.72c1.16.08 1.77 1.22 1.77 1.22c1.03 1.79 2.7 1.27 3.36.97c.1-.76.4-1.27.73-1.56c-2.56-.3-5.25-1.3-5.25-5.79c0-1.28.45-2.32 1.18-3.14c-.12-.3-.51-1.52.11-3.17c0 0 .97-.31 3.18 1.2c.92-.26 1.91-.39 2.89-.39s1.97.13 2.89.39c2.21-1.51 3.18-1.2 3.18-1.2c.62 1.65.23 2.87.11 3.17c.73.82 1.18 1.86 1.18 3.14c0 4.5-2.7 5.49-5.27 5.78c.41.36.78 1.08.78 2.18v3.23c0 .3.2.66.79.55c4.56-1.53 7.85-5.87 7.85-10.99C23.25 5.63 18.27.5 12 .5Z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="game-ui">
+            <div class="top-ui">
+                <div class="score-display">
+                    <span class="score-label">Score:</span>
+                    <span id="player-score" class="score-value">0</span>
+                </div>
+                <div class="length-display">
+                    <span class="length-label">Length:</span>
+                    <span id="player-length" class="length-value">4</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard">
+                <h3 class="leaderboard-title"><svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+                    <rect width="24" height="24" fill="none" />
+                    <path fill="currentColor" d="M7.475 20q-1.852 0-3.163-1.311T3 15.525q0-1.823 1.274-3.126t3.097-1.343q.192 0 .385.029q.192.029.384.067L4.846 4.539h4.77L12 9.308l2.385-4.77h4.769l-3.27 6.545q.174-.039.357-.058q.182-.02.375-.02q1.836.047 3.11 1.35T21 15.5q0 1.877-1.311 3.189T16.5 20q-.283 0-.578-.032q-.295-.031-.558-.12q1.182-.515 1.659-1.751T17.5 15.5q0-2.302-1.599-3.901T12 10t-3.901 1.599T6.5 15.5q0 1.373.44 2.642q.44 1.27 1.69 1.706q-.282.089-.567.12T7.475 20M12 20q-1.875 0-3.187-1.312T7.5 15.5t1.313-3.187T12 11t3.188 1.313T16.5 15.5t-1.312 3.188T12 20m-1.561-2.211L12 16.6l1.562 1.189l-.585-1.93l1.562-1.113h-1.93L12 12.712l-.61 2.034H9.462l1.562 1.114z" />
+                </svg> Leaders</h3>
+                <div id="leaderboard-list" class="leaderboard-content"></div>
+            </div>
+        </div>
+        
+        <div id="spectator-mode" class="spectator-overlay">
+            <div class="spectator-text">Spectator Mode</div>
+            <div id="spectator-target" class="spectator-target"></div>
+        </div>
+    </div>
+
+    <div id="death-screen" class="death-overlay">
+        <div class="death-container">
+            <h2 class="death-title"><svg xmlns="http://www.w3.org/2000/svg" width="42px" height="42px" viewBox="0 0 24 24">
+                <rect width="24" height="24" fill="none" />
+                <path fill="currentColor" d="M8 22L5 8l3-6h8l3 6l-3 14zm3-16v2H9v2h2v5h2v-5h2V8h-2V6z" />
+            </svg> Game Over!</h2>
+            <div class="death-stats">
+                <div class="stat">
+                    <span class="stat-label">Final Score:</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Max Length:</span>
+                    <span id="final-length" class="stat-value">4</span>
+                </div>
+            </div>
+            <div class="death-actions">
+                <button id="spectate-button" class="action-button secondary">Watch Others</button>
+                <button id="restart-button" class="action-button primary">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts/game-core.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-networking.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-rendering.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/game-ui.js') }}"></script>
+</body>
+</html>
